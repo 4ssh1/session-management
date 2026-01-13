@@ -5,6 +5,7 @@ import { RedisConfigModule } from './redis/redis.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { UsersModule } from './users/users.module';
     DatabaseModule,
     RedisConfigModule,
     UsersModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
