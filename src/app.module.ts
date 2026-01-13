@@ -4,12 +4,14 @@ import { DatabaseModule } from './db/db.module';
 import { RedisConfigModule } from './redis/redis.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
     DatabaseModule,
     RedisConfigModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
