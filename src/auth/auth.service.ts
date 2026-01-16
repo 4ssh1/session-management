@@ -33,7 +33,7 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id, name: user.name };
     return {
       access_token: this.jwtService.sign(payload, {
-        expiresIn: this.configService.get('jwt.accessExpiration'),
+        expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
       }),
       user,
     };
@@ -50,7 +50,7 @@ export class AuthService {
     };
 
     const token = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get('jwt.accessExpiration'),
+      expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
     });
 
     // Store token ID in Redis whitelist (15 minutes)
@@ -90,11 +90,11 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {
-      expiresIn: this.configService.get('jwt.accessExpiration'),
+      expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
     });
 
     const refreshToken = this.jwtService.sign(refreshPayload, {
-      expiresIn: this.configService.get('jwt.refreshExpiration'),
+      expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
     });
 
     // Store refresh token in Redis (7 days)
@@ -134,11 +134,11 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(accessPayload, {
-      expiresIn: this.configService.get('jwt.accessExpiration'),
+      expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
     });
 
     const refreshToken = this.jwtService.sign(refreshPayload, {
-      expiresIn: this.configService.get('jwt.refreshExpiration'),
+      expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
     });
 
     // Rotate refresh token - remove old, add new
