@@ -1,98 +1,211 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Session Management Implementation
+What We're Building
+A production-ready NestJS application demonstrating four authentication strategies:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+- JWT Authentication - Stateless tokens
+- Server-Side Sessions - Session store with Redis
+- Hybrid Authentication - Combines both approaches
+- Access + Refresh Tokens - Token rotation strategy
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
+- NestJS - Backend framework
+- PostgreSQL - User data storage
+- Redis - Session storage
+- Passport.js - Authentication middleware
+- Bcrypt - Password hashing
+- TypeORM - Database ORM
+- Docker, Jest, Supertest
 
-## Description
+## JWT Authentication
+### How It Works
+Stateless authentication where the token contains all user information. Server verifies token signature without storing state.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- User logs in with credentials
+- Server generates JWT with user payload
+- Client stores token (localStorage/memory)
+- Client sends token in Authorization header
+- Server verifies token signature on each request
 
-## Project setup
+## Server-Side Sessions
+### How It Works
+Session ID stored in cookie, session data stored server-side in Redis. Server looks up session on each request.
 
+- User logs in with credentials
+- Server creates session in Redis
+- Session ID sent as HTTP-only cookie
+- Client automatically sends cookie
+- Server looks up session in Redis
+
+## Hybrid Authentication
+### How It Works
+Combines JWT for authentication with server-side tracking for immediate invalidation. Best of both worlds.
+
+- User logs in and receives JWT
+- Token ID stored in Redis whitelist
+- Client sends JWT in header
+- Server verifies JWT signature AND checks whitelist
+- Logout removes token from whitelist
+
+## Access + Refresh Tokens
+### How It Works
+Short-lived access tokens with long-lived refresh tokens. Improves security while maintaining good UX.
+
+- Login returns access token (15min) + refresh token (7days)
+- Access token used for API requests
+- When access token expires, use refresh token
+- Refresh endpoint returns new access token
+- Refresh token can be rotated for security
+
+
+## Test Coverage Summary
+
+### Unit Tests (src/**/*.spec.ts)
+UsersService - User CRUD operations and validation
+SessionService - Redis token management
+AuthService - All authentication strategies
+Guards - JWT, Session, Hybrid, Refresh token guards
+
+### Integration Tests (test/integration/)
+Auth workflows with real database and Redis
+Multi-strategy authentication flows
+Token lifecycle management
+
+### E2E Tests (test/*.e2e-spec.ts)
+JWT Authentication - Complete flow from registration to logout
+Session Authentication - Cookie-based auth with Redis sessions
+Hybrid Authentication - Token whitelisting and revocation
+Refresh Token - Token rotation and theft detection
+
+## What Each Test Validates
+
+### JWT Tests
+- User registration with validation
+- Duplicate email prevention
+- Login with valid/invalid credentials
+- Protected route access with/without token
+- Invalid token rejection
+
+### Session Tests
+- Cookie-based authentication
+- Session persistence across requests
+- Session destruction on logout
+- Access denial without session
+
+### Hybrid Tests
+- Token whitelisting in Redis
+- Immediate token revocation
+- Access denial with revoked tokens
+- Whitelist validation on each request
+
+### Refresh Token Tests
+- Dual token issuance (access + refresh)
+- Token rotation on refresh
+- Old refresh token invalidation
+- Token theft detection
+- Proper token type validation
+
+## Test Best Practices Applied
+
+1. **Isolation** - Each test is independent
+2. **Cleanup** - Test data removed after tests
+3. **Mocking** - External dependencies mocked in unit tests
+4. **Real Integration** - E2E tests use real DB and Redis
+5. **Coverage** - All critical paths tested
+6. **Assertions** - Clear, specific expectations
+7. **Descriptive Names** - Test names explain what they verify
+
+## Debugging Tests
+
+### View Test Output
 ```bash
-$ pnpm install
+npm test -- --verbose
 ```
 
-## Compile and run the project
-
+### Run Single Test
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+npm test -- --testNamePattern="should register new user"
 ```
 
-## Run tests
-
+### Debug with Node Inspector
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+node --inspect-brk node_modules/.bin/jest --runInBand
 ```
 
-## Deployment
+## Expected Test Results
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+All tests should pass with:
+- Unit Tests: ~25 tests
+- Integration Tests: ~3 tests
+- E2E Tests: ~20 tests
+- Total Coverage: >80%
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Notes
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+- E2E tests require PostgreSQL and Redis running
+- Integration tests use test database
+- Unit tests are fully mocked (no external deps)
+- Tests demonstrate production-ready patterns
+
+## Folder Structure
+
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+src
+ ┣ auth
+ ┃ ┣ decorators
+ ┃ ┃ ┗ current.user.decorator.ts
+ ┃ ┣ dto
+ ┃ ┃ ┣ login.dto.ts
+ ┃ ┃ ┗ register.dto.ts
+ ┃ ┣ entities
+ ┃ ┃ ┗ auth.entity.ts
+ ┃ ┣ guards
+ ┃ ┃ ┣ hybrid.guard.ts
+ ┃ ┃ ┣ jwt.guard.spec.ts
+ ┃ ┃ ┣ jwt.guard.ts
+ ┃ ┃ ┣ refresh-token.guard.ts
+ ┃ ┃ ┣ session.guard.spec.ts
+ ┃ ┃ ┗ session.guard.ts
+ ┃ ┣ interfaces
+ ┃ ┃ ┗ jwt.interface.ts
+ ┃ ┣ strategies
+ ┃ ┃ ┣ hybrid.strategy.ts
+ ┃ ┃ ┣ jwt.strategy.ts
+ ┃ ┃ ┣ refresh-token.strategy.ts
+ ┃ ┃ ┗ session.strategy.ts
+ ┃ ┣ auth.controller.spec.ts
+ ┃ ┣ auth.controller.ts
+ ┃ ┣ auth.module.ts
+ ┃ ┣ auth.service.spec.ts
+ ┃ ┗ auth.service.ts
+ ┣ db
+ ┃ ┗ db.module.ts
+ ┣ redis
+ ┃ ┗ redis.module.ts
+ ┣ session
+ ┃ ┣ dto
+ ┃ ┃ ┣ create-session.dto.ts
+ ┃ ┃ ┗ update-session.dto.ts
+ ┃ ┣ entities
+ ┃ ┃ ┗ session.entity.ts
+ ┃ ┣ session.controller.spec.ts
+ ┃ ┣ session.controller.ts
+ ┃ ┣ session.module.ts
+ ┃ ┣ session.service.spec.ts
+ ┃ ┗ session.service.ts
+ ┣ users
+ ┃ ┣ dto
+ ┃ ┃ ┣ create-user.dto.ts
+ ┃ ┃ ┗ update-user.dto.ts
+ ┃ ┣ entities
+ ┃ ┃ ┗ user.entity.ts
+ ┃ ┣ users.controller.spec.ts
+ ┃ ┣ users.controller.ts
+ ┃ ┣ users.module.ts
+ ┃ ┣ users.service.spec.ts
+ ┃ ┗ users.service.ts
+ ┣ app.controller.spec.ts
+ ┣ app.controller.ts
+ ┣ app.module.ts
+ ┣ app.service.ts
+ ┗ main.ts
+```
