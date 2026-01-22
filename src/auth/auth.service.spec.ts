@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { SessionService } from '../session/session.service';
 
+// Unit Test: Auth Service
+// Tests authentication logic for all strategies
+
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: UsersService;
