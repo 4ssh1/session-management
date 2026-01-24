@@ -6,9 +6,18 @@ describe('SessionController', () => {
   let controller: SessionController;
 
   beforeEach(async () => {
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SessionController],
-      providers: [SessionService],
+      providers: [
+        SessionService,
+        {
+          provide: require('@nestjs/config').ConfigService,
+          useValue: {
+            get: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<SessionController>(SessionController);

@@ -89,11 +89,7 @@ describe('AuthService', () => {
 
       const result = await service.register(registerDto);
 
-      expect(usersService.create).toHaveBeenCalledWith(
-        registerDto.email,
-        registerDto.password,
-        registerDto.name,
-      );
+      expect(usersService.create).toHaveBeenCalledWith(registerDto);
       expect(result).toEqual(mockUser.toJSON());
     });
   });
@@ -137,7 +133,7 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).toHaveBeenCalledWith(
         { email: user.email, sub: user.id, name: user.name },
-        { expiresIn: '15m' },
+        { expiresIn: mockConfigService.get('JWT_ACCESS_EXPIRATION') },
       );
       expect(result).toEqual({
         access_token: 'jwt-token-123',
@@ -155,9 +151,11 @@ describe('AuthService', () => {
 
       expect(jwtService.sign).toHaveBeenCalled();
       expect(sessionService.storeTokenWhitelist).toHaveBeenCalledWith(
-        expect.any(String),
-        user.id,
-        900,
+        expect.objectContaining({
+          tokenId: expect.any(String),
+          userId: user.id,
+          expiresIn: 900,
+        })
       );
       expect(result).toEqual({
         access_token: 'hybrid-token-123',

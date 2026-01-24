@@ -91,12 +91,17 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
     });
 
-    it("should return null if user not found", async () => {
+    it("should throw NotFoundException if user not found", async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      const result = await service.findByEmail("nonexistent@example.com");
-
-      expect(result).toBeNull();
+      let result:any;
+      try {
+        result = await service.findByEmail("nonexistent@example.com");
+      } catch (error) {
+        result = error;
+      }
+      expect(result).toBeInstanceOf(Error);
+      expect(result.message).toBe("User with email nonexistent@example.com not found");
     });
   });
 
@@ -122,8 +127,8 @@ describe('UsersService', () => {
     it("should handle non-existing user gracefully", async () => {
       mockRepository.update.mockResolvedValue({ affected: 1 });
 
-      await service.updateRefreshToken("123", "null");
-      expect(repository.update).toHaveBeenCalledWith("123", { refreshToken: null });
+      await service.updateRefreshToken("123", "");
+      expect(repository.update).toHaveBeenCalledWith("123", { refreshToken: "" });
     });
   });
 });

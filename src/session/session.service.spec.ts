@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SessionService } from './session.service';
-import { connect } from 'http2';
 
 describe('SessionService', () => {
   let service: SessionService;
@@ -12,11 +11,10 @@ describe('SessionService', () => {
     mockRedisClient = {
       connect: jest.fn().mockResolvedValue(undefined),
       quit: jest.fn().mockResolvedValue(undefined),
-      setEx: jest.fn().mockResolvedValue("OK"),
+      set: jest.fn().mockResolvedValue("OK"),
       get: jest.fn(),
       del: jest.fn().mockResolvedValue(1),
     };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SessionService,
@@ -44,7 +42,7 @@ describe('SessionService', () => {
     it('should store token in whitelist', async () => {
       await service.storeTokenWhitelist({ tokenId: 'token-123', userId: 'user-456', expiresIn: 900 });
 
-      expect(mockRedisClient.setEx).toHaveBeenCalledWith('whitelist:token-123', 900, 'user-456');
+      expect(mockRedisClient.set).toHaveBeenCalledWith('whitelist:token-123', 'user-456', 'EX', 900, 'NX');
     });
 
     it('should check if token is whitelisted (true)', async () => {
@@ -75,7 +73,7 @@ describe('SessionService', () => {
     it('should store refresh token', async () => {
       await service.storeRefreshToken({ tokenId: 'refresh-123', userId: 'user-456', expiresIn: 604800 });
 
-      expect(mockRedisClient.setEx).toHaveBeenCalledWith('refresh:refresh-123', 604800, 'user-456');
+      expect(mockRedisClient.set).toHaveBeenCalledWith('refresh:refresh-123', 'user-456', 'EX', 604800, 'NX');
     });
 
     it('should get user ID from refresh token', async () => {
