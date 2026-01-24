@@ -1,141 +1,55 @@
 # Session Management Implementation
-A  NestJS application demonstrating four authentication strategies:
 
-- JWT Authentication - Stateless tokens
-- Server-Side Sessions - Session store with Redis
-- Hybrid Authentication - Combines both approaches
-- Access + Refresh Tokens - Token rotation strategy
+A **NestJS** application demonstrating four robust authentication strategies:
+
+- **JWT Authentication** (Stateless tokens)
+- **Server-Side Sessions** (Session store with Redis)
+- **Hybrid Authentication** (Combines both approaches)
+- **Access + Refresh Tokens** (Token rotation strategy)
+
+---
+
+## Getting Started
+
+### 1. Clone This Repository
+```bash
+git clone https://github.com/4ssh1/session-management.git
+```
+
+### 2. Install Dependencies
+```bash
+pnpm install
+```
+
+### 3. Setup Environment
+- Copy `.env.example` to `.env` and adjust configuration as needed
+
+### 4. Start Required Services
+```bash
+pnpm docker:up
+```
+
+### 5. Migrations (if needed)
+- Generate and run migrations as required
+
+### 6. Run the App
+```bash
+pnpm start:dev
+```
+
+---
 
 ## Tech Stack
-- NestJS - Backend framework
-- PostgreSQL - User data storage
-- Redis - Session storage
-- Passport.js - Authentication middleware
-- Bcrypt - Password hashing
-- TypeORM - Database ORM
-- Docker, Jest, Supertest
 
-## JWT Authentication
-### How It Works
-Stateless authentication where the token contains all user information. Server verifies token signature without storing state.
+- **NestJS** – Backend framework
+- **PostgreSQL** – User data storage
+- **Redis** – Session storage
+- **Passport.js** – Authentication middleware
+- **Bcrypt** – Password hashing
+- **TypeORM** – Database ORM
+- **Docker, Jest, Supertest** – DevOps & Testing
 
-- User logs in with credentials
-- Server generates JWT with user payload
-- Client stores token (localStorage/memory)
-- Client sends token in Authorization header
-- Server verifies token signature on each request
-
-**Pros & Cons**
-- Pros: Scalable, no server state, works across domains
-- Cons: Cannot invalidate tokens, token size, vulnerable if stolen
-
-## Server-Side Sessions
-### How It Works
-Session ID stored in cookie, session data stored server-side in Redis. Server looks up session on each request.
-
-- User logs in with credentials
-- Server creates session in Redis
-- Session ID sent as HTTP-only cookie
-- Client automatically sends cookie
-- Server looks up session in Redis
-
-**Pros & Cons**
-- Pros: Can invalidate immediately, secure cookies, server control
-- Cons: Not scalable without sticky sessions, requires session store
-
-## Hybrid Authentication
-### How It Works
-Combines JWT for authentication with server-side tracking for immediate invalidation. Best of both worlds.
-
-- User logs in and receives JWT
-- Token ID stored in Redis whitelist
-- Client sends JWT in header
-- Server verifies JWT signature AND checks whitelist
-- Logout removes token from whitelist
-
-**Pros & Cons**
-- Pros: Scalable like JWT, can invalidate like sessions
-- Cons: Requires Redis lookup, more complex
-
-
-## Access + Refresh Tokens
-### How It Works
-Short-lived access tokens with long-lived refresh tokens. Improves security while maintaining good UX.
-
-- Login returns access token (15min) + refresh token (7days)
-- Access token used for API requests
-- When access token expires, use refresh token
-- Refresh endpoint returns new access token
-- Refresh token can be rotated for security
-
-**Pros & Cons**
-- Pros: Limited damage if access token stolen, can revoke refresh tokens
-- Cons: More complex implementation, requires refresh token storage
-
-### Token Rotation
-Each time refresh token is used, issue new refresh token and invalidate old one. Detects token theft if old refresh token is reused.
-
-## Key Directories
-- strategies/ - Passport authentication strategies
-- guards/ - Route protection mechanisms
-- decorators/ - Custom parameter decorators
-- dto/ - Data transfer objects for validation
-
-## What Each Test Validates
-
-### JWT Tests
-- User registration with validation
-- Duplicate email prevention
-- Login with valid/invalid credentials
-- Protected route access with/without token
-- Invalid token rejection
-
-### Session Tests
-- Cookie-based authentication
-- Session persistence across requests
-- Session destruction on logout
-- Access denial without session
-
-### Hybrid Tests
-- Token whitelisting in Redis
-- Immediate token revocation
-- Access denial with revoked tokens
-- Whitelist validation on each request
-
-### Refresh Token Tests
-- Dual token issuance (access + refresh)
-- Token rotation on refresh
-- Old refresh token invalidation
-- Token theft detection
-- Proper token type validation
-
-
-## Test Best Practices Applied
-
-1. **Isolation** - Each test is independent
-2. **Cleanup** - Test data removed after tests
-3. **Mocking** - External dependencies mocked in unit tests
-4. **Real Integration** - E2E tests use real DB and Redis
-5. **Coverage** - All critical paths tested
-6. **Assertions** - Clear, specific expectations
-7. **Descriptive Names** - Test names explain what they verify
-
-## Debugging Tests
-
-### View Test Output
-```bash
-npm test -- --verbose
-```
-
-### Run Single Test
-```bash
-npm test -- --testNamePattern="should register new user"
-```
-
-### Debug with Node Inspector
-```bash
-node --inspect-brk node_modules/.bin/jest --runInBand
-```
+---
 
 ## Folder Structure
 
@@ -197,11 +111,175 @@ src
  ┗ main.ts
 ```
 
-## Contribution
-### Installation
-1. Clone the repository
-2. Run `pnpm install`
-3. Copy `.env.example` and adjust as needed
-4. Start Docker containers: `pnpm docker:up`
-5. Generate and run migrations if needed
-6. Start the app: `pnpm start:dev`
+---
+
+## Key Directories
+
+- `strategies/` – Passport authentication strategies
+- `guards/` – Route protection logic
+- `decorators/` – Custom decorators (e.g., current user extraction)
+- `dto/` – Data transfer objects for validation
+
+---
+
+## Authentication Strategies
+
+### 1. JWT Authentication
+
+#### How It Works
+
+Stateless authentication: the token itself carries all necessary user information. The server verifies the token's signature without maintaining a session.
+
+**Flow:**
+1. User logs in with credentials
+2. Server generates a JWT with user payload
+3. Client stores token (e.g., localStorage)
+4. Client sends token in the `Authorization` header on each request
+5. Server verifies the token’s signature
+
+**Pros**
+- Scalable (no server session state)
+- Works across domains
+
+**Cons**
+- Cannot easily invalidate tokens
+- Token size can be large
+- Compromised tokens can allow unauthorized access
+
+---
+
+### 2. Server-Side Sessions
+
+#### How It Works
+
+A session ID is stored in a secure HTTP-only cookie, while session data is kept on the server (Redis). Each request validates the session via Redis.
+
+**Flow:**
+1. User logs in
+2. Server creates a session in Redis
+3. Session ID sent to client (HTTP-only cookie)
+4. Client sends cookie automatically
+5. Server validates session with Redis on each request
+
+**Pros**
+- Immediate session invalidation
+- Server-controlled security (e.g., secure cookies)
+
+**Cons**
+- Can require sticky sessions for scalability
+- Needs session storage
+
+---
+
+### 3. Hybrid Authentication
+
+#### How It Works
+
+Leverages JWT for stateless authentication but stores token IDs in Redis whitelist for revocation.
+
+**Flow:**
+1. User logs in, receives JWT
+2. Token ID stored in Redis whitelist
+3. Each request: server checks JWT validity *and* Redis whitelist
+4. Logout removes token from whitelist
+
+**Pros**
+- Scalable as JWT
+- Immediate revocation
+
+**Cons**
+- Redis lookup on each request
+- More complex setup
+
+---
+
+### 4. Access + Refresh Tokens
+
+#### How It Works
+
+A "Best Practice" strategy: short-lived access tokens for requests, long-lived refresh tokens for renewal.
+
+**Flow:**
+1. Login issues access (e.g., 15m) & refresh tokens (e.g., 7d)
+2. API requests use access token
+3. Expired access token can be renewed with refresh token
+4. Server issues new access (& optionally refresh) tokens on renewal
+
+**Token Rotation:**
+- On refresh, the server issues a new refresh token and invalidates the old
+- Attempts to reuse an old refresh token can be detected (token theft)
+
+**Pros**
+- Minimal damage if access token compromised
+- Refresh tokens can be revoked for security
+
+**Cons**
+- More complex implementation
+- Secure storage for refresh tokens required
+
+---
+
+## Test Coverage
+
+### JWT Authentication
+- User registration & validation
+- Duplicate email prevention
+- Login with valid/invalid credentials
+- Access for protected routes
+- Invalid token rejection
+
+### Server-Side Sessions
+- Cookie-based auth
+- Session persistence
+- Logout and session destruction
+- Denial without valid session
+
+### Hybrid Auth
+- Token whitelisting
+- Immediate token revocation
+- Denial with revoked/JWT
+- Whitelist checks on every request
+
+### Refresh Token
+- Access & refresh token issuance
+- Rotation on refresh
+- Invalidating stale refresh tokens
+- Token theft checks
+- Validation of token type
+
+---
+
+## 🧑‍🔬 Test Best Practices
+
+1. **Isolation:** Each test is independent
+2. **Cleanup:** Cleans up test data
+3. **Mocking:** External dependencies are mocked for unit tests
+4. **Real Integration:** E2E tests use real DB/Redis
+5. **Coverage:** All critical flows tested
+6. **Assertions:** Clear, direct expectations
+7. **Naming:** Descriptive, self-explanatory test names
+
+---
+
+## Running & Debugging Tests
+
+**View all test output:**  
+```bash
+pnpm test -- --verbose
+```
+**Run a specific test:**  
+```bash
+pnpm test -- --testNamePattern="should register new user"
+```
+**Debugging with Node Inspector:**  
+```bash
+node --inspect-brk node_modules/.bin/jest --runInBand
+```
+
+---
+
+## 🤝 Contribution
+
+Contributions welcome! Please open an issue or submit a pull request to help improve this project.
+
+---
