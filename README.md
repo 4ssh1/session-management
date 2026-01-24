@@ -1,6 +1,5 @@
 # Session Management Implementation
-What We're Building
-A production-ready NestJS application demonstrating four authentication strategies:
+A  NestJS application demonstrating four authentication strategies:
 
 - JWT Authentication - Stateless tokens
 - Server-Side Sessions - Session store with Redis
@@ -26,6 +25,10 @@ Stateless authentication where the token contains all user information. Server v
 - Client sends token in Authorization header
 - Server verifies token signature on each request
 
+**Pros & Cons**
+- Pros: Scalable, no server state, works across domains
+- Cons: Cannot invalidate tokens, token size, vulnerable if stolen
+
 ## Server-Side Sessions
 ### How It Works
 Session ID stored in cookie, session data stored server-side in Redis. Server looks up session on each request.
@@ -35,6 +38,10 @@ Session ID stored in cookie, session data stored server-side in Redis. Server lo
 - Session ID sent as HTTP-only cookie
 - Client automatically sends cookie
 - Server looks up session in Redis
+
+**Pros & Cons**
+- Pros: Can invalidate immediately, secure cookies, server control
+- Cons: Not scalable without sticky sessions, requires session store
 
 ## Hybrid Authentication
 ### How It Works
@@ -46,6 +53,11 @@ Combines JWT for authentication with server-side tracking for immediate invalida
 - Server verifies JWT signature AND checks whitelist
 - Logout removes token from whitelist
 
+**Pros & Cons**
+- Pros: Scalable like JWT, can invalidate like sessions
+- Cons: Requires Redis lookup, more complex
+
+
 ## Access + Refresh Tokens
 ### How It Works
 Short-lived access tokens with long-lived refresh tokens. Improves security while maintaining good UX.
@@ -56,25 +68,18 @@ Short-lived access tokens with long-lived refresh tokens. Improves security whil
 - Refresh endpoint returns new access token
 - Refresh token can be rotated for security
 
+**Pros & Cons**
+- Pros: Limited damage if access token stolen, can revoke refresh tokens
+- Cons: More complex implementation, requires refresh token storage
 
-## Test Coverage Summary
+### Token Rotation
+Each time refresh token is used, issue new refresh token and invalidate old one. Detects token theft if old refresh token is reused.
 
-### Unit Tests (src/**/*.spec.ts)
-UsersService - User CRUD operations and validation
-SessionService - Redis token management
-AuthService - All authentication strategies
-Guards - JWT, Session, Hybrid, Refresh token guards
-
-### Integration Tests (test/integration/)
-Auth workflows with real database and Redis
-Multi-strategy authentication flows
-Token lifecycle management
-
-### E2E Tests (test/*.e2e-spec.ts)
-JWT Authentication - Complete flow from registration to logout
-Session Authentication - Cookie-based auth with Redis sessions
-Hybrid Authentication - Token whitelisting and revocation
-Refresh Token - Token rotation and theft detection
+## Key Directories
+- strategies/ - Passport authentication strategies
+- guards/ - Route protection mechanisms
+- decorators/ - Custom parameter decorators
+- dto/ - Data transfer objects for validation
 
 ## What Each Test Validates
 
@@ -104,6 +109,7 @@ Refresh Token - Token rotation and theft detection
 - Token theft detection
 - Proper token type validation
 
+
 ## Test Best Practices Applied
 
 1. **Isolation** - Each test is independent
@@ -131,21 +137,6 @@ npm test -- --testNamePattern="should register new user"
 node --inspect-brk node_modules/.bin/jest --runInBand
 ```
 
-## Expected Test Results
-
-All tests should pass with:
-- Unit Tests: ~25 tests
-- Integration Tests: ~3 tests
-- E2E Tests: ~20 tests
-- Total Coverage: >80%
-
-## Notes
-
-- E2E tests require PostgreSQL and Redis running
-- Integration tests use test database
-- Unit tests are fully mocked (no external deps)
-- Tests demonstrate production-ready patterns
-
 ## Folder Structure
 
 ```
@@ -156,8 +147,6 @@ src
  ┃ ┣ dto
  ┃ ┃ ┣ login.dto.ts
  ┃ ┃ ┗ register.dto.ts
- ┃ ┣ entities
- ┃ ┃ ┗ auth.entity.ts
  ┃ ┣ guards
  ┃ ┃ ┣ hybrid.guard.ts
  ┃ ┃ ┣ jwt.guard.spec.ts
@@ -185,8 +174,6 @@ src
  ┃ ┣ dto
  ┃ ┃ ┣ create-session.dto.ts
  ┃ ┃ ┗ update-session.dto.ts
- ┃ ┣ entities
- ┃ ┃ ┗ session.entity.ts
  ┃ ┣ session.controller.spec.ts
  ┃ ┣ session.controller.ts
  ┃ ┣ session.module.ts
@@ -211,3 +198,10 @@ src
 ```
 
 ## Contribution
+### Installation
+1. Clone the repository
+2. Run `pnpm install`
+3. Copy `.env.example` and adjust as needed
+4. Start Docker containers: `pnpm docker:up`
+5. Generate and run migrations if needed
+6. Start the app: `pnpm start:dev`
