@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import session from 'express-session';
-import RedisStore from 'connect-redis';
+import { RedisStore } from 'connect-redis';
 import Redis from 'ioredis';
 
 async function bootstrap() {
@@ -26,8 +26,8 @@ async function bootstrap() {
 
   // Setup Redis client for sessions using ioredis
   const redisClient = new Redis({
-    host: configService.get('redis.host'),
-    port: configService.get('redis.port'),
+    host: configService.get('REDIS_HOST'),
+    port: configService.get('REDIS_PORT'),
   });
 
   redisClient.on('connect', () => {
@@ -38,11 +38,11 @@ async function bootstrap() {
   app.use(
     session({
       store: new RedisStore({ client: redisClient }),
-      secret: configService.get('session.secret')!,
+      secret: configService.get('SECRET')!,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: configService.get('session.maxAge'),
+        maxAge: 24 * 60 * 60 * 1000, // 1 day in ms, or use configService.get('SESSION_MAXAGE') if set
         httpOnly: true,
         secure: false, // Set to true in production with HTTPS
         sameSite: 'lax',
@@ -50,7 +50,7 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get('port');
+  const port = configService.get('PORT');
   await app.listen(port);
 }
 bootstrap();

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Res, Session } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Res, Session, HttpException, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -9,6 +9,7 @@ import { HybridAuthGuard } from './guards/hybrid.guard';
 import { CurrentUser } from './decorators/current.user.decorator';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
@@ -23,7 +24,7 @@ export class AuthController {
   async jwtLogin(@Body() dto: LoginDto) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     return this.authService.jwtLogin(user);
   }
@@ -57,7 +58,7 @@ export class AuthController {
   ) {
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
     session.userId = user.id;
@@ -80,14 +81,16 @@ export class AuthController {
   }
 
   @Post("session/logout")
-  sessionLogout(@Session() session: Record<string, any>, 
-    @Res() res: Response) {
-    session.destroy((err) => {
-      if (err) {
-        return res.status(500).send({ message: "Logout failed" });
-      } 
-      res.clearCookie('connect.sid');
-      return res.send({ message: "Session logout successful" });
+  async sessionLogout(@Session() session: Record<string, any>) {
+    return new Promise((resolve, reject) => {
+      session.destroy((err: any) => {
+        if (err) {
+          reject({ message: "Logout failed" });
+        } else {
+          // Cookie clearing is handled by session middleware
+          resolve({ message: "Session logout successful" });
+        }
+      });
     });
   }
 }
