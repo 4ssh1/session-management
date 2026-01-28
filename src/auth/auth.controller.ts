@@ -93,4 +93,78 @@ export class AuthController {
       });
     });
   }
+
+  // ==================== HYBRID AUTHENTICATION ====================
+  
+  @Post('hybrid/register')
+  async hybridRegister(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Post('hybrid/login')
+  async hybridLogin(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    if (!user) {
+      throw new Error('Invalid credentials');
+    }
+    return this.authService.hybridLogin(user);
+  }
+
+  @Get('hybrid/profile')
+  @UseGuards(HybridAuthGuard)
+  hybridProfile(@CurrentUser() user: any) {
+    return {
+      message: 'Hybrid Authentication successful',
+      user,
+      strategy: 'hybrid',
+      note: 'Token is validated AND checked against Redis whitelist',
+    };
+  }
+
+  @Post('hybrid/logout')
+  @UseGuards(HybridAuthGuard)
+  async hybridLogout(@CurrentUser() user: any) {
+    await this.authService.hybridLogout(user.tokenId);
+    return { message: 'Logout successful. Token removed from whitelist.' };
+  }
+
+  // ==================== REFRESH TOKEN AUTHENTICATION ====================
+  
+  @Post('refresh/register')
+  async refreshRegister(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Post('refresh/login')
+  async refreshLogin(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    if (!user) {
+      throw new Error('Invalid credentials');
+    }
+    return this.authService.refreshTokenLogin(user);
+  }
+
+  @Get('refresh/profile')
+  @UseGuards(JwtAuthGuard)
+  refreshProfile(@CurrentUser() user: any) {
+    return {
+      message: 'Access token validated',
+      user,
+      strategy: 'refresh-token',
+      note: 'Use short-lived access token for API calls',
+    };
+  }
+
+  @Post('refresh/refresh')
+  @UseGuards(RefreshTokenGuard)
+  async refreshTokens(@CurrentUser() user: any) {
+    return this.authService.refreshAccessToken(user.userId, user.tokenId);
+  }
+
+  @Post('refresh/logout')
+  @UseGuards(RefreshTokenGuard)
+  async refreshLogout(@CurrentUser() user: any) {
+    await this.authService.refreshTokenLogout(user.tokenId);
+    return { message: 'Logout successful. Refresh token invalidated.' };
+  }
 }
