@@ -75,7 +75,6 @@ src
  ┃ ┃ ┣ jwt.strategy.ts
  ┃ ┃ ┣ refresh-token.strategy.ts
  ┃ ┃ ┗ session.strategy.ts
- ┃ ┣ auth.controller.spec.ts
  ┃ ┣ auth.controller.ts
  ┃ ┣ auth.module.ts
  ┃ ┣ auth.service.spec.ts
@@ -88,7 +87,6 @@ src
  ┃ ┣ dto
  ┃ ┃ ┣ create-session.dto.ts
  ┃ ┃ ┗ update-session.dto.ts
- ┃ ┣ session.controller.spec.ts
  ┃ ┣ session.controller.ts
  ┃ ┣ session.module.ts
  ┃ ┣ session.service.spec.ts
