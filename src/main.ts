@@ -3,8 +3,8 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import session from 'express-session';
-import { RedisStore } from 'connect-redis';
 import Redis from 'ioredis';
+import connectRedis from 'connect-redis';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -33,6 +33,8 @@ async function bootstrap() {
   redisClient.on('connect', () => {
     console.log('Redis connected for session store');
   });
+
+  const RedisStore = connectRedis(session);
 
   // Session middleware for session-based auth
   app.use(
