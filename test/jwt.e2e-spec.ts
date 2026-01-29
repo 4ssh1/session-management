@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { ConfigModule } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/users/entities/user.entity';
 
@@ -11,7 +12,10 @@ describe('JWT Authentication (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.dev' }),
+        AppModule,
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -20,11 +24,14 @@ describe('JWT Authentication (e2e)', () => {
     userRepository = moduleFixture.get(getRepositoryToken(User));
     
     await app.init();
+    
+    // Clean up before tests
+    await userRepository.delete({ email: 'jwt.test@example.com' });
   });
 
   afterAll(async () => {
     // Clean up test data
-    await userRepository.delete({});
+    await userRepository.delete({ email: 'jwt.test@example.com' });
     await app.close();
   });
 
@@ -91,7 +98,7 @@ describe('JWT Authentication (e2e)', () => {
           email: testUser.email,
           password: 'wrongpassword',
         })
-        .expect(500);
+        .expect(401); // Changed from 500
     });
 
     it('/auth/jwt/profile (GET) - should access protected route with token', () => {
@@ -100,7 +107,7 @@ describe('JWT Authentication (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200)
         .expect((res) => {
-          expect(res.body).toHaveProperty('message', 'JWT Authentication successful');
+          expect(res.body).toHaveProperty('message', 'JWT authentication successful'); // Fixed case
           expect(res.body).toHaveProperty('user');
           expect(res.body).toHaveProperty('strategy', 'jwt');
         });

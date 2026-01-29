@@ -28,6 +28,19 @@ async function bootstrap() {
   const redisClient = new Redis({
     host: configService.get('REDIS_HOST'),
     port: configService.get('REDIS_PORT'),
+    maxRetriesPerRequest: 10,
+    retryStrategy(times) {
+      // Exponential backoff up to 2 seconds
+      return Math.min(times * 100, 2000);
+    },
+    reconnectOnError(err) {
+      // Reconnect on connection reset/aborted
+      const targetErrors = ['ECONNRESET', 'ECONNABORTED'];
+      if (targetErrors.some(code => err.message.includes(code))) {
+        return true;
+      }
+      return false;
+    },
   });
 
   redisClient.on('connect', () => {

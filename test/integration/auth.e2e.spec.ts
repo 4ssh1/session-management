@@ -17,6 +17,7 @@ describe('Auth Integration Tests', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true, // makes ConfigService available everywhere
+          envFilePath: '.env.dev',
         }),
 
         TypeOrmModule.forRootAsync({
@@ -85,9 +86,7 @@ describe('Auth Integration Tests', () => {
       expect(jwtResult).toHaveProperty('access_token');
       expect(jwtResult.user).toBeTruthy();
 
-      await usersService['usersRepository'].delete({
-        email: testUser.email,
-      });
+      await usersService['usersRepository'].clear();
     });
 
     it('should handle hybrid auth with Redis whitelist', async () => {
@@ -106,9 +105,7 @@ describe('Auth Integration Tests', () => {
 
       expect(hybridResult).toHaveProperty('access_token');
 
-      await usersService['usersRepository'].delete({
-        email: 'hybrid.int@example.com',
-      });
+      await usersService['usersRepository'].clear();
     });
   });
 });

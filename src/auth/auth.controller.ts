@@ -56,6 +56,9 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Session() session: Record<string, any>
   ) {
+    if (!session) {
+      throw new HttpException('Session is not initialized', HttpStatus.FORBIDDEN);
+    }
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);

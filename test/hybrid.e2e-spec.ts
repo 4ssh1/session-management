@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { ConfigModule } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/users/entities/user.entity';
 
@@ -11,19 +12,24 @@ describe('Hybrid Authentication (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.dev' }),
+        AppModule,
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    
+
     userRepository = moduleFixture.get(getRepositoryToken(User));
-    
+
     await app.init();
+    // Clean up before tests
+    await userRepository.delete({ email: 'hybrid.test@example.com' });
   });
 
   afterAll(async () => {
-    await userRepository.delete({});
+    await userRepository.delete({ email: 'hybrid.test@example.com' });
     await app.close();
   });
 
