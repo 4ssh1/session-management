@@ -37,6 +37,16 @@ pnpm docker:up
 pnpm start:dev
 ```
 
+### 7. Run Tests
+
+**Run all unit tests:**  
+```bash
+pnpm test 
+```
+**Run end-to-end tests:**  
+```bash
+pnpm test:e2e
+```
 ---
 
 ## Tech Stack
@@ -48,66 +58,6 @@ pnpm start:dev
 - **Bcrypt** – Password hashing
 - **TypeORM** – Database ORM
 - **Docker, Jest, Supertest** – DevOps & Testing
-
----
-
-## Folder Structure
-
-```
-src
- ┣ auth
- ┃ ┣ decorators
- ┃ ┃ ┗ current.user.decorator.ts
- ┃ ┣ dto
- ┃ ┃ ┣ login.dto.ts
- ┃ ┃ ┗ register.dto.ts
- ┃ ┣ guards
- ┃ ┃ ┣ hybrid.guard.ts
- ┃ ┃ ┣ jwt.guard.spec.ts
- ┃ ┃ ┣ jwt.guard.ts
- ┃ ┃ ┣ refresh-token.guard.ts
- ┃ ┃ ┣ session.guard.spec.ts
- ┃ ┃ ┗ session.guard.ts
- ┃ ┣ interfaces
- ┃ ┃ ┗ jwt.interface.ts
- ┃ ┣ strategies
- ┃ ┃ ┣ hybrid.strategy.ts
- ┃ ┃ ┣ jwt.strategy.ts
- ┃ ┃ ┣ refresh-token.strategy.ts
- ┃ ┃ ┗ session.strategy.ts
- ┃ ┣ auth.controller.ts
- ┃ ┣ auth.module.ts
- ┃ ┣ auth.service.spec.ts
- ┃ ┗ auth.service.ts
- ┣ db
- ┃ ┗ db.module.ts
- ┣ redis
- ┃ ┗ redis.module.ts
- ┣ session
- ┃ ┣ dto
- ┃ ┃ ┣ create-session.dto.ts
- ┃ ┃ ┗ update-session.dto.ts
- ┃ ┣ session.controller.ts
- ┃ ┣ session.module.ts
- ┃ ┣ session.service.spec.ts
- ┃ ┗ session.service.ts
- ┣ users
- ┃ ┣ dto
- ┃ ┃ ┣ create-user.dto.ts
- ┃ ┃ ┗ update-user.dto.ts
- ┃ ┣ entities
- ┃ ┃ ┗ user.entity.ts
- ┃ ┣ users.controller.spec.ts
- ┃ ┣ users.controller.ts
- ┃ ┣ users.module.ts
- ┃ ┣ users.service.spec.ts
- ┃ ┗ users.service.ts
- ┣ app.controller.spec.ts
- ┣ app.controller.ts
- ┣ app.module.ts
- ┣ app.service.ts
- ┗ main.ts
-```
 
 ---
 
@@ -217,6 +167,65 @@ A "Best Practice" strategy: short-lived access tokens for requests, long-lived r
 
 ---
 
+## Folder Structure
+
+```
+src
+ ┣ auth
+ ┃ ┣ decorators
+ ┃ ┃ ┗ current.user.decorator.ts
+ ┃ ┣ dto
+ ┃ ┃ ┣ login.dto.ts
+ ┃ ┃ ┗ register.dto.ts
+ ┃ ┣ guards
+ ┃ ┃ ┣ hybrid.guard.ts
+ ┃ ┃ ┣ jwt.guard.spec.ts
+ ┃ ┃ ┣ jwt.guard.ts
+ ┃ ┃ ┣ refresh-token.guard.ts
+ ┃ ┃ ┣ session.guard.spec.ts
+ ┃ ┃ ┗ session.guard.ts
+ ┃ ┣ interfaces
+ ┃ ┃ ┗ jwt.interface.ts
+ ┃ ┣ strategies
+ ┃ ┃ ┣ hybrid.strategy.ts
+ ┃ ┃ ┣ jwt.strategy.ts
+ ┃ ┃ ┣ refresh-token.strategy.ts
+ ┃ ┃ ┗ session.strategy.ts
+ ┃ ┣ auth.controller.ts
+ ┃ ┣ auth.module.ts
+ ┃ ┣ auth.service.spec.ts
+ ┃ ┗ auth.service.ts
+ ┣ db
+ ┃ ┗ db.module.ts
+ ┣ redis
+ ┃ ┗ redis.module.ts
+ ┣ session
+ ┃ ┣ dto
+ ┃ ┃ ┣ create-session.dto.ts
+ ┃ ┃ ┗ update-session.dto.ts
+ ┃ ┣ session.service.spec.ts
+ ┃ ┗ session.service.ts
+ ┣ users
+ ┃ ┣ dto
+ ┃ ┃ ┣ create-user.dto.ts
+ ┃ ┃ ┗ update-user.dto.ts
+ ┃ ┣ entities
+ ┃ ┃ ┗ user.entity.ts
+ ┃ ┣ users.controller.spec.ts
+ ┃ ┣ users.controller.ts
+ ┃ ┣ users.module.ts
+ ┃ ┣ users.service.spec.ts
+ ┃ ┗ users.service.ts
+ ┣ app.controller.spec.ts
+ ┣ app.controller.ts
+ ┣ app.module.ts
+ ┣ app.service.ts
+ ┗ main.ts
+```
+
+---
+
+
 ## Test Coverage
 
 ### JWT Authentication
@@ -256,23 +265,6 @@ A "Best Practice" strategy: short-lived access tokens for requests, long-lived r
 5. **Coverage:** All critical flows tested
 6. **Assertions:** Clear, direct expectations
 7. **Naming:** Descriptive, self-explanatory test names
-
----
-
-## Running & Debugging Tests
-
-**View all test output:**  
-```bash
-pnpm test -- --verbose
-```
-**Run a specific test:**  
-```bash
-pnpm test -- --testNamePattern="should register new user"
-```
-**Debugging with Node Inspector:**  
-```bash
-node --inspect-brk node_modules/.bin/jest --runInBand
-```
 
 ---
 
