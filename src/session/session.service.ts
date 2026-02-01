@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Redis } from 'ioredis'
 import { StoreDto } from './dto/create-session.dto';
-import { UpdateSessionDto } from './dto/update-session.dto';
 
 @Injectable()
 export class SessionService implements OnModuleInit, OnModuleDestroy {
@@ -14,6 +13,15 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
     this.redisClient = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times) => {
+        if (times > 3) {
+          return null; // Stop retrying
+        }
+        return Math.min(times * 50, 2000);
+      },
+      lazyConnect: true,
+      enableOfflineQueue: false,
     });
 
     this.redisClient.on('connect', () => {
@@ -21,12 +29,28 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.redisClient.on('error', (err) => {
-      console.error('Redis connection error:', err);
+      // Suppress ECONNRESET errors during cleanup
+      if ((err as any).code !== 'ECONNRESET') {
+        console.error('Redis connection error:', err);
+      }
     });
+
+    try {
+      await this.redisClient.connect();
+    } catch (err) {
+      console.error('Failed to connect to Redis:', err);
+    }
   }
 
   async onModuleDestroy() {
-    await this.redisClient.quit();
+    try {
+      if (this.redisClient && this.redisClient.status !== 'end') {
+        await this.redisClient.quit();
+      }
+    } catch (err) {
+      // Ignore errors during cleanup
+      console.error('Error closing Redis connection:', err);
+    }
   }
 
   async storeTokenWhitelist(storeDto: StoreDto) {

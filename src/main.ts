@@ -27,7 +27,7 @@ async function bootstrap() {
   // Setup Redis client for sessions using ioredis
   const redisClient = new Redis({
     host: configService.get('REDIS_HOST'),
-    port: configService.get('REDIS_PORT'),
+    port: parseInt(configService.get('REDIS_PORT') || '6379'),
     maxRetriesPerRequest: 10,
     retryStrategy(times) {
       // Exponential backoff up to 2 seconds
@@ -65,7 +65,7 @@ async function bootstrap() {
     }),
   );
 
-  const port = configService.get('PORT');
+  const port = parseInt(configService.get('PORT') || '3000');
   await app.listen(port);
 }
 bootstrap();

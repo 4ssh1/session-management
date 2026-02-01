@@ -203,6 +203,7 @@ src
  ┃ ┣ dto
  ┃ ┃ ┣ create-session.dto.ts
  ┃ ┃ ┗ update-session.dto.ts
+ ┃ ┣ session.module.ts
  ┃ ┣ session.service.spec.ts
  ┃ ┗ session.service.ts
  ┣ users

@@ -10,7 +10,17 @@ import { RedisModule } from '@nestjs-modules/ioredis';
         useFactory: (configService: ConfigService) => ({
                 host: configService.get<string>('REDIS_HOST'),
                 port: configService.get<number>('REDIS_PORT'),
-                type: 'single',}),
+                type: 'single',
+                options: {
+                  maxRetriesPerRequest: 3,
+                  retryStrategy: (times) => {
+                    if (times > 3) return null;
+                    return Math.min(times * 50, 2000);
+                  },
+                  lazyConnect: false,
+                  enableOfflineQueue: false,
+                },
+              }),
     }),
   ],
   exports: [RedisModule],

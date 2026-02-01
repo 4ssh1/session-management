@@ -11,9 +11,10 @@ describe('Auth Integration Tests', () => {
   let authService: AuthService;
   let usersService: UsersService;
   let sessionService: SessionService;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
           isGlobal: true, // makes ConfigService available everywhere
@@ -24,12 +25,12 @@ describe('Auth Integration Tests', () => {
           inject: [ConfigService],
           useFactory: (config: ConfigService) => ({
             type: 'postgres',
-            host: config.get<string>('DATABASE_HOST', 'localhost'),
-            port: config.get<number>('DATABASE_PORT', 5432),
-            username: config.get<string>('DATABASE_USER', 'postgres'),
-            password: config.get<string>('DATABASE_PASSWORD', 'postgres'),
+            host: config.get<string>('DB_HOST', 'localhost'),
+            port: config.get<number>('DB_PORT', 5432),
+            username: config.get<string>('DB_USER', 'postgres'),
+            password: config.get<string>('DB_PASSWORD', 'postgres'),
             database: config.get<string>(
-              'DATABASE_NAME',
+              'DB_NAME',
               'session_management_test',
             ),
             entities: [User],
@@ -58,6 +59,10 @@ describe('Auth Integration Tests', () => {
     sessionService = module.get(SessionService);
 
     await module.init();
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 
   describe('Complete Authentication Workflow', () => {
