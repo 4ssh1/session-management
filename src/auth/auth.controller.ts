@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Res, Session, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Res, Session, HttpException, HttpStatus, HttpCode } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -56,9 +56,6 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Session() session: Record<string, any>
   ) {
-    if (!session) {
-      throw new HttpException('Session is not initialized', HttpStatus.FORBIDDEN);
-    }
     const user = await this.authService.validateUser(dto.email, dto.password);
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -67,7 +64,7 @@ export class AuthController {
     session.userId = user.id;
     session.email = user.email;
 
-    return { message: "Session login successful", user };
+    return { message: "Login successful", user };
   }
 
   @Get("session/profile")
@@ -84,6 +81,7 @@ export class AuthController {
   }
 
   @Post("session/logout")
+  @HttpCode(200)
   async sessionLogout(@Session() session: Record<string, any>) {
     return new Promise((resolve, reject) => {
       session.destroy((err: any) => {

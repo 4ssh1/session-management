@@ -2,9 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/users/entities/user.entity';
+import session from 'express-session';
+import connectRedis from 'connect-redis';
+import { InjectRedis } from '@nestjs-modules/ioredis';
 
 describe('Session Authentication (e2e)', () => {
   let app: INestApplication;
@@ -21,6 +24,29 @@ describe('Session Authentication (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+    const configService = app.get(ConfigService);
+    
+    // Get the Redis client from the module
+    const redisClient = moduleFixture.get('default_IORedisModuleConnectionToken');
+    
+    const RedisStore = connectRedis(session);
+
+    // Session middleware for session-based auth
+    app.use(
+      session({
+        store: new RedisStore({ client: redisClient }),
+        secret: configService.get('SECRET')!,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          maxAge: 24 * 60 * 60 * 1000,
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+        },
+      }),
+    );
 
     userRepository = moduleFixture.get(getRepositoryToken(User));
 
@@ -67,7 +93,7 @@ describe('Session Authentication (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.strategy).toBe('session');
-          expect(res.body.user.userId).toBeDefined();
+          expect(res.body.user.id).toBeDefined();
         });
 
       // Logout
